@@ -9,14 +9,14 @@ import logging
 import os
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from dotenv import load_dotenv
+
 
 from bot.handlers import router
 from bot.database import init_db
 from bot.config import BOT_TOKEN, set_bot_username
 
-# Загружаем переменные окружения
-load_dotenv()
+
+
 
 # Настройка логирования
 logging.basicConfig(
@@ -64,3 +64,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
