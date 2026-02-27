@@ -1,66 +1,58 @@
-#!/usr/bin/env python3
-"""
-SHIZOGP - Telegram Bot for CS2 Skins Trading
-Главный файл запуска бота
-"""
-
-import asyncio
-import logging
 import os
-from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
+import logging
+import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+from aiogram.types import Message
 
+# ========== НАСТРОЙКИ ==========
+BOT_TOKEN = os.getenv('BOT_TOKEN')  # Берется из окружения BotHost
 
-from bot.handlers import router
-from bot.database import init_db
-from bot.config import BOT_TOKEN, set_bot_username
-
-
-
-
-# Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Проверка токена
 if not BOT_TOKEN:
-    logger.error("❌ Нет токена! Добавь BOT_TOKEN в .env файл")
-    exit(1)
+    raise ValueError("❌ НЕТ ТОКЕНА! Добавьте BOT_TOKEN в переменные окружения")
 
-# Инициализация бота
+# ========== ИНИЦИАЛИЗАЦИЯ ==========
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(storage=MemoryStorage())
-dp.include_router(router)
+dp = Dispatcher()
+logging.basicConfig(level=logging.INFO)
 
-async def on_startup():
-    """Действия при запуске"""
-    logger.info("🚀 Запуск бота SHIZOGP...")
-    
-    # Инициализация базы данных
-    await init_db()
-    logger.info("✅ База данных готова")
-    
-    # Получаем информацию о боте
-    await set_bot_username(bot)
-    logger.info(f"✅ Бот: @{bot._me.username}")
+# ========== ПРОСТЕЙШИЕ КОМАНДЫ ==========
+@dp.message(Command("start"))
+async def cmd_start(message: Message):
+    await message.answer(
+        f"👋 Привет, {message.from_user.first_name}!\n\n"
+        f"🔥 Бот SHIZOGP работает!\n"
+        f"🆔 Твой ID: {message.from_user.id}"
+    )
 
-async def on_shutdown():
-    """Действия при остановке"""
-    logger.info("👋 Бот остановлен")
+@dp.message(Command("help"))
+async def cmd_help(message: Message):
+    await message.answer(
+        "📋 Доступные команды:\n"
+        "/start - Начать\n"
+        "/help - Помощь\n"
+        "/info - Информация"
+    )
 
+@dp.message(Command("info"))
+async def cmd_info(message: Message):
+    await message.answer(
+        f"🤖 Информация о боте:\n"
+        f"Имя: SHIZOGP\n"
+        f"Версия: 1.0\n"
+        f"Сервер: BotHost"
+    )
+
+@dp.message()
+async def echo_message(message: Message):
+    """Отвечает на любое сообщение"""
+    await message.answer(f"Ты написал: {message.text}")
+
+# ========== ЗАПУСК ==========
 async def main():
-    """Главная функция"""
-    await on_startup()
-    
-    try:
-        logger.info("🔥 Бот запущен и готов к работе!")
-        await dp.start_polling(bot)
-    finally:
-        await on_shutdown()
-        await bot.session.close()
+    print("🔥 SHIZOGP БОТ ЗАПУЩЕН!")
+    print(f"🤖 Бот: @{(await bot.get_me()).username}")
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
